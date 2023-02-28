@@ -1,123 +1,355 @@
-from uuid import uuid4
+from uuid import uuid4, UUID
 from datetime import datetime
 from sys import argv, exit
 from json import dump, dumps, load
 from pathlib import Path
+from re import match
 
 
 class Task():
-    def __init__(self, name, description, owner):
-        self.id = str(uuid4())
-        self.name = name
-        self.description = description
-        self.owner = owner
-        self.creation_at = str(datetime.now())
-
-
-        if not Path('.tasks.json').exists():
-            self.task = {
-                'id': self.id,
-                'name': self.name,
-                'description': self.description,
-                'creation_at': self.creation_at,
-                'owner': self.owner
-            }
+    @classmethod
+    def load(self):
+        if Path('.tasks.json').exists():
+            tasks = load(open('.tasks.json', 'r'))
         else:
-            self.task = load(open('.tasks.json', 'r'))
+            print("Task data file not found. Create a task and try again.")
+            exit(1)
+        return tasks
 
 
-    def create(self):
-        self.store()
-        return dumps(self.task, indent=2)
-
-
-    def start(self):
-        if 'started_at' in self.task.keys():
-            self.task['started_at'].append(str(datetime.now()))
-        else:
-            self.task['started_at'] = []
-            self.task['started_at'].append(str(datetime.now()))
-
-        if 'stoped_at' in self.task.keys():
-            count_stops = len(self.task['stoped_at'])
-            count_starts = len(self.task['started_at']) 
-            if not (count_starts - count_stops) < 2:
-                raise Exception("You can't start a task that already started.")
-
-        self.store()
-        return dumps(self.task, indent=2)
-
-
-    def stop(self):
-        if not 'started_at' in self.task.keys():
-            raise Exception("You can't stop a task that hasn't started yet.")
-        else:
-            if 'stoped_at' in self.task.keys():
-                self.task['stoped_at'].append(str(datetime.now()))
+    @classmethod
+    def store(self, task, delete=False):
+        if Path('.tasks.json').exists():
+            tasks = self.load()
+            if delete is True:
+                task_data = [ t for t in tasks['tasks'] if t['id'] == task['id'] ][0]
+                index = tasks['tasks'].index(task_data)
+                del tasks['tasks'][index]
+            elif task['name'] in [ task['name'] for task in tasks['tasks'] ]:
+                task_data = [ t for t in tasks['tasks'] if t['id'] == task['id'] ][0]
+                index = tasks['tasks'].index(task_data)
+                tasks['tasks'][index] = task
             else:
-                self.task['stoped_at'] = []
-                self.task['stoped_at'].append(str(datetime.now()))
+                tasks['tasks'].append(task)
 
-            count_starts = len(self.task['started_at']) 
-            count_stops = len(self.task['stoped_at'])
+            with open('.tasks.json', 'w+') as task_file:
+                dump(tasks, task_file, indent=2)
+        else:
+            with open('.tasks.json', 'w+') as task_file:
+                dump({"tasks":[task]}, task_file, indent=2)
+
+
+    @classmethod
+    def get(self, task_name):
+        task_name = self.check(task_name, 'name')
+        tasks = self.load()['tasks']
+        for task in tasks:
+            if task['name'] == task_name:
+                return task
+
+
+    @classmethod
+    def check(self, param, type):
+        if type == 'id':
+            isinstance(UUID, param)
+            return param
+        if type == 'name':
+            name_pattern = r'^[a-z][a-z0-9-_]{2,19}$'
+            if match(name_pattern, param):
+                return param
+            else:
+                print(f"Parameter '{param}' don't  match allowed pattern('alphanumeric text, with underscores and hiphens; max 20 characters').")
+                exit(1)
+        if type == 'description':
+            description_pattern = r'^[a-zA-Z][a-zA-Z0-9-_,. ]{2,49}$'
+            if match(description_pattern, param):
+                return param
+            else:
+                print(f"Parameter '{param}' don't  match allowed pattern('alphanumeric text, with underscores, spaces and hiphens; max 50 characters').")
+                exit(1)
+        if type == 'owner':
+            owner_pattern = r'^([a-z][a-z0-9-_]{2,19}$)|(^[a-z0-9.]+@[a-z0-9]+((\.[a-z]+)|(\.[a-z]+\.([a-z]+))))$'
+            if match(owner_pattern, param):
+                return param
+            else:
+                print(f"Parameter '{param}' don't  match allowed pattern('username or an email').")
+                exit(1)
+        else:
+            print(f"Please, inform a value to parameter '{param}'")
+            exit(1)
+
+
+    def describe(self, task_name):
+        task_name = self.check(task_name, 'name')
+        task = dumps(self.get(task_name), indent=2)
+
+        if task != 'null':
+            print(task)
+        else:
+            print(f"Task '{task_name}' not found.")
+            exit(1)
+
+
+    def create(self, name, description, owner):
+        name = self.check(name, 'name')
+        description = self.check(description, 'description')
+        owner = self.check(owner, 'owner')
+
+        task = {
+            'id': str(uuid4()),
+            'name': name,
+            'description': description,
+            'created_at': str(datetime.now()),
+            'owner': owner
+        }
+
+        if Path('.tasks.json').exists():
+            tasks = self.load()['tasks']
+            if name in [ task['name'] for task in tasks ]:
+                print("This task already exists")
+                exit(1)
+            self.store(task)
+        else:
+            self.store(task)
+
+        print(f"Task \"{task['name']}\" created")
+
+
+    def start(self, task_name):
+        task_name = self.check(task_name, 'name')
+        task = self.get(task_name)
+
+        if not task:
+            print("Task not found.")
+            exit(1)
+
+        if 'started_at' in task.keys():
+            if 'stoped_at' in task.keys():
+                count_starts = len(task['started_at'])
+                count_stops = len(task['stoped_at'])
+                if not (count_starts - count_stops) < 2:
+                    print("You can't start a task that has already started.")
+                    exit(1)
+                else:
+                    task['started_at'].append(str(datetime.now()))
+            else:
+                count_starts = len(task['started_at'])
+                if count_starts == 1:
+                    print("You can't start a task that has already started.")
+                    exit(1)
+                else:
+                    task['started_at'].append(str(datetime.now()))
+            if 'finished_at' in task.keys():
+                del task['finished_at']
+            if 'canceled_at' in task.keys():
+                del task['canceled_at']
+        else:
+            task['started_at'] = []
+            task['started_at'].append(str(datetime.now()))
+
+        self.store(task)
+        print(f"Task \"{task['name']}\" started")
+
+
+    def stop(self, task_name):
+        task_name = self.check(task_name, 'name')
+        task = self.get(task_name)
+
+        if not task:
+            print("Task not found.")
+            exit(1)
+
+        if not 'started_at' in task.keys():
+            print("You can't stop a task that hasn't started yet.")
+            exit(1)
+        else:
+            if 'stoped_at' in task.keys():
+                task['stoped_at'].append(str(datetime.now()))
+            else:
+                task['stoped_at'] = []
+                task['stoped_at'].append(str(datetime.now()))
+
+            count_starts = len(task['started_at']) 
+            count_stops = len(task['stoped_at'])
+            if 'finished_at' in task.keys():
+                print("You can't stop a task that has already finished. You need to start it again first.")
+                exit(1)
             if count_stops > count_starts:
-                raise Exception("You can't stop a task that already stoped.")
+                print("You can't stop a task that has already stoped.")
+                exit(1)
 
-            start_datetime = datetime.strptime(self.task['started_at'][-1], "%Y-%m-%d %H:%M:%S.%f")
-            stop_datetime = datetime.strptime(self.task['stoped_at'][-1], "%Y-%m-%d %H:%M:%S.%f")
-            if 'duration' in self.task.keys():
-                current_duration = datetime.strptime(self.task['duration'], "%H:%M:%S.%f")
-                self.task['duration'] = str((stop_datetime - start_datetime) + current_duration).split(' ')[1]
+            start_datetime = datetime.strptime(task['started_at'][-1], "%Y-%m-%d %H:%M:%S.%f")
+            stop_datetime = datetime.strptime(task['stoped_at'][-1], "%Y-%m-%d %H:%M:%S.%f")
+            if 'duration' in task.keys():
+                current_duration = datetime.strptime(task['duration'], "%H:%M:%S.%f")
+                task['duration'] = str((stop_datetime - start_datetime) + current_duration).split(' ')[1]
             else:
-                self.task['duration'] = str(stop_datetime - start_datetime)
-        self.store()
-        return dumps(self.task, indent=2)
+                task['duration'] = str(stop_datetime - start_datetime)
+        self.store(task)
+        print(f"Task \"{task['name']}\" stoped")
 
 
-    def finish(self):
-        if 'finished_at' in self.task.keys():
-            raise Exception("You can't finish a task that already finished.")
-        elif not 'started_at' in self.task.keys():
-            raise Exception("You can't finish a task that hasn't started yet.")
+    def finish(self, task_name):
+        task_name = self.check(task_name, 'name')
+        task = self.get(task_name)
+
+        if not task:
+            print("Task not found.")
+            exit(1)
+
+        if 'finished_at' in task.keys():
+            print("You can't finish a task that has already finished.")
+            exit(1)
+        elif not 'started_at' in task.keys():
+            print("You can't finish a task that hasn't started yet.")
+            exit(1)
         else:
-            self.task['finished_at'] = str(datetime.now())
+            task['finished_at'] = str(datetime.now())
 
-            start_datetime = datetime.strptime(self.task['started_at'][0], "%Y-%m-%d %H:%M:%S.%f")
-            finish_datetime = datetime.strptime(self.task['finished_at'], "%Y-%m-%d %H:%M:%S.%f")
-            self.task['duration'] = str(finish_datetime - start_datetime)
-        self.store()
-        return dumps(self.task, indent=2)
+            start_datetime = datetime.strptime(task['started_at'][0], "%Y-%m-%d %H:%M:%S.%f")
+            finish_datetime = datetime.strptime(task['finished_at'], "%Y-%m-%d %H:%M:%S.%f")
+            task['duration'] = str(finish_datetime - start_datetime)
+        self.store(task)
+        print(f"Task \"{task['name']}\" finished")
 
 
-    def store(self):
-        task_content = self.task
-        with open('.tasks.json', 'w+',) as task_file:
-            dump(task_content, task_file, indent=2)
+    def cancel(self, task_name):
+        task_name = self.check(task_name, 'name')
+        task = self.get(task_name)
+
+        if not task:
+            print("Task not found.")
+            exit(1)
+
+        if 'canceled_at' in task.keys():
+            print("You can't cancel a task that has already canceled.")
+            exit(1)
+        elif not 'started_at' in task.keys():
+            print("You can't cancel a task that hasn't started yet.")
+            exit(1)
+        elif not 'finished_at' in task.keys():
+            print("You can't cancel a task that has finished.")
+            exit(1)
+        else:
+            task['canceled_at'] = str(datetime.now())
+
+            start_datetime = datetime.strptime(task['started_at'][0], "%Y-%m-%d %H:%M:%S.%f")
+            cancel_datetime = datetime.strptime(task['canceled_at'], "%Y-%m-%d %H:%M:%S.%f")
+            task['duration'] = str(cancel_datetime - start_datetime)
+        self.store(task)
+        print(f"Task \"{task['name']}\" canceled")
+
+
+    def delete(self, task_name):
+        task_name = self.check(task_name, 'name')
+        task = self.get(task_name)
+
+        if not task:
+            print("Task not found.")
+            exit(1)
+
+        self.store(task, delete=True)
+        print(f"Task \"{task['name']}\" deleted")
+
+
+    def list(self):
+        tasks = self.load()['tasks']
+        if len(tasks) < 1:
+            print("No tasks found.")
+        else:
+            print("id\tname\tdescription\towner\t\tcreated_at\t\t\tstatus")
+            for task in tasks:
+                id = task['name']
+                name = task['name']
+                description = task['description']
+                owner = task['owner']
+                created_at = task['created_at']
+
+                if 'started_at' in task.keys():
+                    count_starts = len(task['started_at'])
+                else:
+                    count_starts = 0
+
+                if 'started_at' in task.keys():
+                    count_stops = len(task['stoped_at'])
+                else:
+                    count_stops = 0
+
+                if 'stoped_at' in task.keys() and count_starts > count_stops:
+                    status = 'stoped'
+                elif 'canceled_at' in task.keys():
+                    status = 'canceled'
+                elif 'finished_at' in task.keys():
+                    status = 'done'
+                else:
+                    status = 'doing'
+                    
+                print(f"{id}\t{name}\t{description}\t\t{owner}\t{created_at}\t{status}")
 
 
 if __name__ == "__main__":
-    if argv[1] == 'create':
-        name = argv[2]
-        description = argv[3]
-        owner = argv[4]
+    options = ['create', 'describe', 'start', 'stop', 'finish', 'cancel', 'delete', 'list']
+    options_with_no_args = ['list']
 
-        task = Task(name, description, owner)
-        print(task.create())
+    if len(argv) > 1:
+        if argv[1] not in options:
+            print(f"Option '{argv[1]}' not implemented.")
+            exit(1)
 
-    if argv[1] == 'start':
-        name = argv[2]
-        task_data = load(open('.tasks.json', 'r'))
-        task = Task(task_data['name'], task_data['description'], task_data['owner'])
-        print(task.start())
+        if len(argv) >= 3:
+            if argv[1] == 'create':
+                name = argv[2]
 
-    if argv[1] == 'stop':
-        name = argv[2]
-        task_data = load(open('.tasks.json', 'r'))
-        task = Task(task_data['name'], task_data['description'], task_data['owner'])
-        print(task.stop())
+                if argv[3]:
+                    description = argv[3]
+                else:
+                    print("Please, inform task description.")
+                    exit(1)
 
-    if argv[1] == 'finish':
-        name = argv[2]
-        task_data = load(open('.tasks.json', 'r'))
-        task = Task(task_data['name'], task_data['description'], task_data['owner'])
-        print(task.finish())
+                if argv[4]:
+                    owner = argv[4]
+                else:
+                    print("Please, inform task owner.")
+
+                task = Task()
+                task.create(name, description, owner)
+
+            if argv[1] == 'describe':
+                name = argv[2]
+                task = Task()
+                task.describe(name)
+
+            elif argv[1] == 'start':
+                name = argv[2]
+                task = Task()
+                task.start(name)
+
+            elif argv[1] == 'stop':
+                name = argv[2]
+                task = Task()
+                task.stop(name)
+
+            elif argv[1] == 'finish':
+                name = argv[2]
+                task = Task()
+                task.finish(name)
+
+            elif argv[1] == 'cancel':
+                name = argv[2]
+                task = Task()
+                task.cancel(name)
+
+            elif argv[1] == 'delete':
+                name = argv[2]
+                task = Task()
+                task.delete(name)
+        else:
+            if argv[1] == 'list':
+                task = Task()
+                task.list()
+            else:
+                print("Please, informe the task name.")
+                exit(1)
+    else:
+        print("Please, informe an valid option.")
+        exit(1)
