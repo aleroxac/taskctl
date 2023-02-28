@@ -3,10 +3,15 @@ Command line tool for task management.
 
 
 ## TO-DOs
+- [x] fix test: create
+- [\] fix test: start
+- [ ] fix test: stop
+- [ ] fix test: finish
+
+- [ ] test get function
+- [ ] test load function
 - [ ] test store function
-
-- [ ] a finished task cannot be stoped
-- [ ] a finished task can be started again, but finished_at key should be removed
-
-- [ ] check if data-file exists
-- [ ] check if data-file has a valid content
+- [ ] test describe function
+- [ ] test cancel function
+- [ ] test delete function
+- [ ] test list function
