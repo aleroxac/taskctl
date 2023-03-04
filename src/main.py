@@ -132,6 +132,10 @@ class Task():
                     exit(1)
                 else:
                     task['started_at'].append(str(datetime.now()))
+            elif 'finished_at' in task.keys():
+                del task['finished_at']
+            elif 'canceled_at' in task.keys():
+                del task['canceled_at']
             else:
                 count_starts = len(task['started_at'])
                 if count_starts == 1:
@@ -139,10 +143,6 @@ class Task():
                     exit(1)
                 else:
                     task['started_at'].append(str(datetime.now()))
-            if 'finished_at' in task.keys():
-                del task['finished_at']
-            if 'canceled_at' in task.keys():
-                del task['canceled_at']
         else:
             task['started_at'] = []
             task['started_at'].append(str(datetime.now()))

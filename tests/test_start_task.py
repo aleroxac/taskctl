@@ -17,7 +17,6 @@ def test_start_task_when_not_exists(capsys):
 
     teardown_test()
 
-
 def test_start_task_when_exists(capsys):
     new_task = setup_test(capsys)
 
@@ -64,7 +63,6 @@ def test_start_task_stoped_with_start_stop_diff_count_ok(capsys):
 
     teardown_test()
 
-
 def test_start_task_stoped_with_start_stop_diff_count_nok(capsys):
     new_task = setup_test(capsys)
 
@@ -105,22 +103,97 @@ def test_start_task_stoped_with_start_stop_diff_count_nok(capsys):
 
 
 
+def test_start_task_without_stop_and_start_count_ok(capsys):
+    new_task = setup_test(capsys)
+
+    new_task.start('test')
+    captured = capsys.readouterr()
+
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+
+    assert 'started_at' in task.keys()
+    assert captured.out == f"Task \"{task['name']}\" started\n"
+    assert task['started_at'][-1] > task['created_at']
+
+    teardown_test()
+
+def test_start_task_without_stop_and_start_count_nok(capsys):
+    new_task = setup_test(capsys)
+
+    new_task.start('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'started_at' in task.keys()
+    assert captured.out == f"Task \"{task['name']}\" started\n"
+    assert task['started_at'][-1] > task['created_at']
+
+    with pytest.raises(SystemExit) as err:
+        new_task.start('test')
+        captured = capsys.readouterr()
+        tasks = load(open('.tasks.json', 'r'))['tasks']
+        task = [ task for task in tasks if task['name'] == 'test' ][0]
+        assert 'started_at' in task.keys()
+        assert err.value.code == 1
+        assert captured.out == "You can't start a task that has already started.\n"
+
+    teardown_test()
 
 
-# def test_start_task_without_stop_and_start_count_ok(capsys):
-#     pass
 
+def test_start_task_finished(capsys):
+    new_task = setup_test(capsys)
 
-# def test_start_task_without_stop_and_start_count_nok(capsys):
-#     pass
+    new_task.start('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'started_at' in task.keys()
+    assert captured.out == f"Task \"{task['name']}\" started\n"
+    assert task['started_at'][-1] > task['created_at']
 
+    new_task.finish('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'finished_at' in task.keys()
+    assert captured.out == f"Task \"{task['name']}\" finished\n"
+    assert task['finished_at'] > task['started_at'][-1]
 
+    new_task.start('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'started_at' in task.keys()
+    assert not 'finished_at' in task.keys()
 
+    teardown_test()
 
+def test_start_task_canceled(capsys):
+    new_task = setup_test(capsys)
 
-# def test_start_task_finished(capsys):
-#     pass
+    new_task.start('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'started_at' in task.keys()
+    assert captured.out == f"Task \"{task['name']}\" started\n"
+    assert task['started_at'][-1] > task['created_at']
 
+    new_task.cancel('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'canceled_at' in task.keys()
+    assert captured.out == f"Task \"{task['name']}\" canceled\n"
+    assert task['canceled_at'] > task['started_at'][-1]
 
-# def test_start_task_canceled(capsys):
-#     pass
+    new_task.start('test')
+    captured = capsys.readouterr()
+    tasks = load(open('.tasks.json', 'r'))['tasks']
+    task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'started_at' in task.keys()
+    assert not 'canceled_at' in task.keys()
+
+    teardown_test()
