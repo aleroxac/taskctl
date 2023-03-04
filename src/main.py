@@ -54,25 +54,25 @@ class Task():
             isinstance(UUID, param)
             return param
         if type == 'name':
-            name_pattern = r'^[a-z][a-z0-9-_]{2,19}$'
+            name_pattern = r'^[a-z][a-z0-9-_]{2,49}$'
             if match(name_pattern, param):
                 return param
             else:
-                print(f"Parameter '{param}' don't  match allowed pattern('alphanumeric text, with underscores and hiphens; max 20 characters').")
+                print(f"Parameter '{type}' don't  match allowed pattern('alphanumeric text, with underscores and hiphens; max 50 characters').")
                 exit(1)
         if type == 'description':
-            description_pattern = r'^[a-zA-Z][a-zA-Z0-9-_,. ]{2,49}$'
+            description_pattern = r'^[a-zA-Z][a-zA-Z0-9-_,. ]{2,99}$'
             if match(description_pattern, param):
                 return param
             else:
-                print(f"Parameter '{param}' don't  match allowed pattern('alphanumeric text, with underscores, spaces and hiphens; max 50 characters').")
+                print(f"Parameter '{type}' don't  match allowed pattern('alphanumeric text, with underscores, spaces and hiphens; max 100 characters').")
                 exit(1)
         if type == 'owner':
-            owner_pattern = r'^([a-z][a-z0-9-_]{2,19}$)|(^[a-z0-9.]+@[a-z0-9]+((\.[a-z]+)|(\.[a-z]+\.([a-z]+))))$'
+            owner_pattern = r'^([a-z][a-z0-9-_]{2,29}$)|(^[a-z0-9.]+@[a-z0-9]+((\.[a-z]+)|(\.[a-z]+\.([a-z]+))))$'
             if match(owner_pattern, param):
                 return param
             else:
-                print(f"Parameter '{param}' don't  match allowed pattern('username or an email').")
+                print(f"Parameter '{type}' don't  match allowed pattern('username or an email').")
                 exit(1)
         else:
             print(f"Please, inform a value to parameter '{param}'")
@@ -127,7 +127,7 @@ class Task():
             if 'stoped_at' in task.keys():
                 count_starts = len(task['started_at'])
                 count_stops = len(task['stoped_at'])
-                if not (count_starts - count_stops) < 2:
+                if not (count_starts - count_stops) < 1:
                     print("You can't start a task that has already started.")
                     exit(1)
                 else:
@@ -227,9 +227,9 @@ class Task():
         elif not 'started_at' in task.keys():
             print("You can't cancel a task that hasn't started yet.")
             exit(1)
-        elif not 'finished_at' in task.keys():
-            print("You can't cancel a task that has finished.")
-            exit(1)
+        # elif not 'finished_at' in task.keys():
+        #     print("You can't cancel a task that has finished.")
+        #     exit(1)
         else:
             task['canceled_at'] = str(datetime.now())
 
@@ -259,31 +259,33 @@ class Task():
         else:
             print("id\tname\tdescription\towner\t\tcreated_at\t\t\tstatus")
             for task in tasks:
-                id = task['name']
+                id = task['id']
                 name = task['name']
                 description = task['description']
                 owner = task['owner']
                 created_at = task['created_at']
 
                 if 'started_at' in task.keys():
+                    status = 'doing'
                     count_starts = len(task['started_at'])
+                    if 'stoped_at' in task.keys():
+                        count_stops = len(task['stoped_at'])
+                    else:
+                        count_stops = 0
                 else:
-                    count_starts = 0
-
-                if 'started_at' in task.keys():
-                    count_stops = len(task['stoped_at'])
-                else:
+                    status = 'to-do'
                     count_stops = 0
 
-                if 'stoped_at' in task.keys() and count_starts > count_stops:
+                if 'stoped_at' in task.keys() and count_starts == count_stops:
                     status = 'stoped'
-                elif 'canceled_at' in task.keys():
+
+                if 'canceled_at' in task.keys():
                     status = 'canceled'
-                elif 'finished_at' in task.keys():
+                
+                if 'finished_at' in task.keys():
                     status = 'done'
-                else:
-                    status = 'doing'
-                    
+
+
                 print(f"{id}\t{name}\t{description}\t\t{owner}\t{created_at}\t{status}")
 
 
