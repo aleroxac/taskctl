@@ -1,9 +1,6 @@
 import pytest
-from src.main import Task
-from pathlib import Path
 from json import load
 from .helpers import setup_test, teardown_test
-
 
 
 def test_start_task_when_not_exists(capsys):
@@ -185,6 +182,7 @@ def test_start_task_canceled(capsys):
     captured = capsys.readouterr()
     tasks = load(open('.tasks.json', 'r'))['tasks']
     task = [ task for task in tasks if task['name'] == 'test' ][0]
+    assert 'started_at' in task.keys()
     assert 'canceled_at' in task.keys()
     assert captured.out == f"Task \"{task['name']}\" canceled\n"
     assert task['canceled_at'] > task['started_at'][-1]

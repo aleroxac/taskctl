@@ -5,7 +5,7 @@ Command line tool for task management.
 ## TO-DOs
 - [x] fix test: create
 - [x] fix test: start
-- [ ] fix test: stop
+- [x] fix test: stop
 - [ ] fix test: finish
 
 - [ ] test get function
