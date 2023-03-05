@@ -164,19 +164,29 @@ class Task():
             exit(1)
         else:
             if 'stoped_at' in task.keys():
-                task['stoped_at'].append(str(datetime.now()))
+                count_starts = len(task['started_at']) 
+                count_stops = len(task['stoped_at'])
+                if 'finished_at' in task.keys():
+                    print("You can't stop a task that has already finished. You need to start it again first.")
+                    exit(1)
+                elif 'canceled' in task.keys():
+                    print("You can't stop a task that has already canceled. You need to start it again first.")
+                    exit(1)
+                elif count_stops >= count_starts:
+                    print("You can't stop a task that has already stoped.")
+                    exit(1)
+                else:
+                    task['stoped_at'].append(str(datetime.now()))
             else:
-                task['stoped_at'] = []
-                task['stoped_at'].append(str(datetime.now()))
-
-            count_starts = len(task['started_at']) 
-            count_stops = len(task['stoped_at'])
-            if 'finished_at' in task.keys():
-                print("You can't stop a task that has already finished. You need to start it again first.")
-                exit(1)
-            if count_stops > count_starts:
-                print("You can't stop a task that has already stoped.")
-                exit(1)
+                if 'finished_at' in task.keys():
+                    print("You can't stop a task that has already finished. You need to start it again first.")
+                    exit(1)
+                elif 'canceled_at' in task.keys():
+                    print("You can't stop a task that has already canceled. You need to start it again first.")
+                    exit(1)
+                else:
+                    task['stoped_at'] = []
+                    task['stoped_at'].append(str(datetime.now()))
 
             start_datetime = datetime.strptime(task['started_at'][-1], "%Y-%m-%d %H:%M:%S.%f")
             stop_datetime = datetime.strptime(task['stoped_at'][-1], "%Y-%m-%d %H:%M:%S.%f")
