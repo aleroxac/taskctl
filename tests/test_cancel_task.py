@@ -39,7 +39,9 @@ def test_cancel_task_canceled(capsys):
     captured = capsys.readouterr()
     task = get_task()
     assert err.value.code == 1
-    assert captured.out == "You can't cancel a task that has already canceled. You need to start it again first.\n"
+    assert captured.out == \
+        "You can't cancel a task that has already canceled. \
+                You need to start it again first.\n"
 
     teardown_test()
 
@@ -54,7 +56,8 @@ def test_cancel_task_unstarted(capsys):
     task = get_task()
     assert 'started_at' not in task.keys()
     assert 'canceled_at' not in task.keys()
-    assert captured.out == "You can't cancel a task that hasn't started yet. You need to start it again first.\n"
+    assert captured.out == "You can't cancel a task that hasn't started yet. \
+                You need to start it again first.\n"
     assert err.value.code == 1
 
     teardown_test()
@@ -78,7 +81,9 @@ def test_cancel_task_finished(capsys):
     assert 'finished_at' in task.keys()
     assert 'canceled_at' not in task.keys()
     assert err.value.code == 1
-    assert captured.out == "You can't cancel a task that has already finished. You need to start it again first.\n"
+    assert captured.out == \
+        "You can't cancel a task that has already finished. \
+                You need to start it again first.\n"
 
     teardown_test()
 

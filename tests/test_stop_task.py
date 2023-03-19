@@ -78,7 +78,8 @@ def test_stop_task_finished(capsys):
     assert 'finished_at' in task.keys()
     assert 'stoped_at' not in task.keys()
     assert err.value.code == 1
-    assert captured.out == "You can't stop a task that has already finished. You need to start it again first.\n"
+    assert captured.out == "You can't stop a task that has already finished. \
+                            You need to start it again first.\n"
 
     teardown_test()
 
@@ -101,7 +102,8 @@ def test_stop_task_canceled(capsys):
     assert 'canceled_at' in task.keys()
     assert 'stoped_at' not in task.keys()
     assert err.value.code == 1
-    assert captured.out == "You can't stop a task that has already canceled. You need to start it again first.\n"
+    assert captured.out == "You can't stop a task that has already canceled. \
+                            You need to start it again first.\n"
 
     teardown_test()
 

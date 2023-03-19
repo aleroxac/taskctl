@@ -1,4 +1,3 @@
-import pytest
 from .helpers import setup_test, teardown_test, get_task
 
 
@@ -18,7 +17,7 @@ def test_list_task_when_not_exists(capsys):
 
 def test_list_tasks_with_started_items(capsys):
     new_task = setup_test()
-    
+
     new_task.start('test')
     task = get_task()
     assert 'started_at' in task.keys()

@@ -17,7 +17,7 @@ def test_describe_task_when_not_exists(capsys):
 
 def test_describe_task(capsys):
     new_task = setup_test()
-    
+
     task = get_task()
     new_task.describe('test')
     assert 'id' in task.keys()

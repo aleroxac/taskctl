@@ -36,7 +36,8 @@ def test_finish_task_finished(capsys):
     captured = capsys.readouterr()
     task = get_task()
     assert err.value.code == 1
-    assert captured.out == "You can't finish a task that has already finished.\n"
+    assert captured.out == \
+        "You can't finish a task that has already finished.\n"
 
     teardown_test()
 
@@ -51,7 +52,8 @@ def test_finish_task_unstarted(capsys):
     task = get_task()
     assert 'started_at' not in task.keys()
     assert 'finished_at' not in task.keys()
-    assert captured.out == "You can't finish a task that hasn't started yet.\n"
+    assert captured.out == \
+        "You can't finish a task that hasn't started yet.\n"
     assert err.value.code == 1
 
     teardown_test()

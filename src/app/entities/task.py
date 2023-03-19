@@ -1,3 +1,5 @@
+"""Class for task entity."""
+
 from pathlib import Path
 from uuid import uuid4, UUID
 from re import match
@@ -130,7 +132,7 @@ class Task():
         if task != 'null':
             print(task)
         else:
-            print(f"Task not found.")
+            print("Task not found.")
             exit(1)
 
     def create(self, args):
@@ -212,11 +214,13 @@ class Task():
                 count_starts = len(task['started_at'])
                 count_stops = len(task['stoped_at'])
                 if 'finished_at' in task.keys():
-                    print("You can't stop a task that has already finished. You need to start it again first.")
+                    print("You can't stop a task that has already finished. \
+                        You need to start it again first.")
                     exit(1)
                 elif 'canceled' in task.keys():
                     print(
-                        "You can't stop a task that has already canceled.You need to start it again first.")
+                        "You can't stop a task that has already canceled. \
+                            You need to start it again first.")
                     exit(1)
                 elif count_stops >= count_starts:
                     print("You can't stop a task that has already stoped.")
@@ -226,11 +230,13 @@ class Task():
             else:
                 if 'finished_at' in task.keys():
                     print(
-                        "You can't stop a task that has already finished. You need to start it again first.")
+                        "You can't stop a task that has already finished. \
+                            You need to start it again first.")
                     exit(1)
                 elif 'canceled_at' in task.keys():
                     print(
-                        "You can't stop a task that has already canceled. You need to start it again first.")
+                        "You can't stop a task that has already canceled. \
+                            You need to start it again first.")
                     exit(1)
                 else:
                     task['stoped_at'] = []
@@ -288,13 +294,16 @@ class Task():
             exit(1)
 
         if 'canceled_at' in task.keys():
-            print("You can't cancel a task that has already canceled. You need to start it again first.")
+            print("You can't cancel a task that has already canceled. \
+                You need to start it again first.")
             exit(1)
         elif 'finished_at' in task.keys():
-            print("You can't cancel a task that has already finished. You need to start it again first.")
+            print("You can't cancel a task that has already finished. \
+                You need to start it again first.")
             exit(1)
         elif 'started_at' not in task.keys():
-            print("You can't cancel a task that hasn't started yet. You need to start it again first.")
+            print("You can't cancel a task that hasn't started yet. \
+                You need to start it again first.")
             exit(1)
         else:
             task['canceled_at'] = str(datetime.now())

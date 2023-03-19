@@ -1,10 +1,12 @@
 """Command line tool for task management."""
+
 from sys import exit, argv, path
 from pathlib import Path
 path.append(str(Path(__file__).parent.parent.parent))
 
 
 def format_task(tasks, format='table', style='plain'):
+    """Format task."""
     if tasks is None:
         return
 
@@ -19,7 +21,7 @@ def format_task(tasks, format='table', style='plain'):
 
         available_table_styles = tabulate.tabulate_formats
         if style not in available_table_styles:
-            print(f"Invalid table format '{style}'.")
+            print("Invalid table format '{style}'.")
             print(f"\nAvailable table format: \n{available_table_styles}\n")
             exit(1)
 
@@ -45,11 +47,13 @@ def format_task(tasks, format='table', style='plain'):
 
 
 def show_task(tasks):
+    """Show task."""
     if tasks != 'null' and tasks is not None:
         print(tasks)
 
 
 def call_action():
+    """Call task action."""
     from app.entities.task import Task
 
     """Call one of task functions."""
