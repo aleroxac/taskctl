@@ -5,6 +5,7 @@ from json import dump, dumps, load
 from datetime import datetime
 from sys import exit
 
+
 class Task():
     """Class with Task entity functions."""
 
@@ -129,7 +130,7 @@ class Task():
         if task != 'null':
             print(task)
         else:
-            print(f"Task '{task_name}' not found.")
+            print(f"Task not found.")
             exit(1)
 
     def create(self, args):
@@ -192,7 +193,7 @@ class Task():
             task['started_at'].append(str(datetime.now()))
 
         self.store(task)
-        print(f"Task \"{task['name']}\" started")
+        print(f"Task \"{task['name']}\" started.")
 
     def stop(self, task_name):
         """Stop a task."""
@@ -211,14 +212,11 @@ class Task():
                 count_starts = len(task['started_at'])
                 count_stops = len(task['stoped_at'])
                 if 'finished_at' in task.keys():
-                    print(
-                        "You can't stop a task that has already finished. \
-                            You need to start it again first.")
+                    print("You can't stop a task that has already finished. You need to start it again first.")
                     exit(1)
                 elif 'canceled' in task.keys():
                     print(
-                        "You can't stop a task that has already canceled. \
-                            You need to start it again first.")
+                        "You can't stop a task that has already canceled.You need to start it again first.")
                     exit(1)
                 elif count_stops >= count_starts:
                     print("You can't stop a task that has already stoped.")
@@ -228,13 +226,11 @@ class Task():
             else:
                 if 'finished_at' in task.keys():
                     print(
-                        "You can't stop a task that has already finished. \
-                            You need to start it again first.")
+                        "You can't stop a task that has already finished. You need to start it again first.")
                     exit(1)
                 elif 'canceled_at' in task.keys():
                     print(
-                        "You can't stop a task that has already canceled. \
-                            You need to start it again first.")
+                        "You can't stop a task that has already canceled. You need to start it again first.")
                     exit(1)
                 else:
                     task['stoped_at'] = []
@@ -253,7 +249,7 @@ class Task():
             else:
                 task['duration'] = str(stop_datetime - start_datetime)
         self.store(task)
-        print(f"Task \"{task['name']}\" stoped")
+        print(f"Task \"{task['name']}\" stoped.")
 
     def finish(self, task_name):
         """Finish a task."""
@@ -267,19 +263,20 @@ class Task():
         if 'finished_at' in task.keys():
             print("You can't finish a task that has already finished.")
             exit(1)
+        elif 'canceled_at' in task.keys():
+            del task['canceled_at']
         elif 'started_at' not in task.keys():
             print("You can't finish a task that hasn't started yet.")
             exit(1)
-        else:
-            task['finished_at'] = str(datetime.now())
 
-            start_datetime = datetime.strptime(
-                task['started_at'][0], "%Y-%m-%d %H:%M:%S.%f")
-            finish_datetime = datetime.strptime(
-                task['finished_at'], "%Y-%m-%d %H:%M:%S.%f")
-            task['duration'] = str(finish_datetime - start_datetime)
+        task['finished_at'] = str(datetime.now())
+        start_datetime = datetime.strptime(
+            task['started_at'][0], "%Y-%m-%d %H:%M:%S.%f")
+        finish_datetime = datetime.strptime(
+            task['finished_at'], "%Y-%m-%d %H:%M:%S.%f")
+        task['duration'] = str(finish_datetime - start_datetime)
         self.store(task)
-        print(f"Task \"{task['name']}\" finished")
+        print(f"Task \"{task['name']}\" finished.")
 
     def cancel(self, task_name):
         """Cancel a task."""
@@ -291,10 +288,13 @@ class Task():
             exit(1)
 
         if 'canceled_at' in task.keys():
-            print("You can't cancel a task that has already canceled.")
+            print("You can't cancel a task that has already canceled. You need to start it again first.")
+            exit(1)
+        elif 'finished_at' in task.keys():
+            print("You can't cancel a task that has already finished. You need to start it again first.")
             exit(1)
         elif 'started_at' not in task.keys():
-            print("You can't cancel a task that hasn't started yet.")
+            print("You can't cancel a task that hasn't started yet. You need to start it again first.")
             exit(1)
         else:
             task['canceled_at'] = str(datetime.now())
@@ -305,7 +305,7 @@ class Task():
                 task['canceled_at'], "%Y-%m-%d %H:%M:%S.%f")
             task['duration'] = str(cancel_datetime - start_datetime)
         self.store(task)
-        print(f"Task \"{task['name']}\" canceled")
+        print(f"Task \"{task['name']}\" canceled.")
 
     def delete(self, task_name):
         """Delete a task."""
@@ -317,7 +317,7 @@ class Task():
             exit(1)
 
         self.store(task, delete=True)
-        print(f"Task \"{task['name']}\" deleted")
+        print(f"Task \"{task['name']}\" deleted.")
 
     def list(self):
         """List all tasks."""
@@ -348,7 +348,8 @@ class Task():
                         count_stops = 0
                         count_starts = 0
 
-                    if 'stoped_at' in task.keys() and count_starts == count_stops:
+                    if 'stoped_at' in task.keys() and \
+                            count_starts == count_stops:
                         status = 'stoped'
 
                     if 'canceled_at' in task.keys():

@@ -1,23 +1,13 @@
 """Command line tool for task management."""
-from sys import argv, exit, path
+from sys import exit, argv, path
 from pathlib import Path
-path.append(str(Path(__file__).parent))
-path.append(str(Path(__file__).parent) + '__init__.py')
-path.append(str(Path(__file__).parent.parent))
-path.append(str(Path(__file__).parent.parent) + '__init__.py')
 path.append(str(Path(__file__).parent.parent.parent))
-path.append(str(Path(__file__).parent.parent.parent) + '__init__.py')
-path.append(str(Path(__file__).parent.parent.parent) + '/app')
-path.append(str(Path(__file__).parent.parent.parent) + '/app/__init__.py')
-path.append(str(Path(__file__).parent.parent.parent) + '/app/entities')
-path.append(str(Path(__file__).parent.parent.parent) + '/app/entities/task.py')
-path.append(
-    str(Path(__file__).parent.parent.parent) + '/app/entities/__init__.py'
-)
-from app.entities.task import Task
 
 
 def format_task(tasks, format='table', style='plain'):
+    if tasks is None:
+        return
+
     if format == 'json':
         from json import dumps
         task_list = dumps(tasks, indent=2)
@@ -28,7 +18,7 @@ def format_task(tasks, format='table', style='plain'):
         import tabulate
 
         available_table_styles = tabulate.tabulate_formats
-        if not style in available_table_styles:
+        if style not in available_table_styles:
             print(f"Invalid table format '{style}'.")
             print(f"\nAvailable table format: \n{available_table_styles}\n")
             exit(1)
@@ -36,24 +26,32 @@ def format_task(tasks, format='table', style='plain'):
         task_cells = []
         for task in tasks:
             if format == 'wide':
-                task_cel = [task['id'], task['name'], task['description'], task['created_at'], task['owner'], task['status']]
-                task_headers = ['ID', 'NAME', 'DESCRIPTION', 'CREATED_AT', 'OWNER', 'STATUS']
+                task_cel = [task['id'], task['name'], task['description'],
+                            task['created_at'], task['owner'], task['status']]
+                task_headers = ['ID', 'NAME', 'DESCRIPTION',
+                                'CREATED_AT', 'OWNER', 'STATUS']
             else:
                 task_cel = [task['name'], task['owner'], task['status']]
                 task_headers = ['NAME', 'OWNER', 'STATUS']
 
             task_cells.append(task_cel)
-            task_list = tabulate.tabulate(task_cells, task_headers, tablefmt=style)
+            task_list = tabulate.tabulate(
+                task_cells,
+                task_headers,
+                tablefmt=style
+            )
 
     return task_list
 
 
 def show_task(tasks):
-    if len(tasks) > 1 and tasks != 'null':
+    if tasks != 'null' and tasks is not None:
         print(tasks)
 
 
 def call_action():
+    from app.entities.task import Task
+
     """Call one of task functions."""
     if argv[1] == 'create':
         task = Task()
@@ -65,11 +63,17 @@ def call_action():
         tasks = task.list()
 
         if any(item in argv for item in ['-o', '--output']):
-            format_arg_index = [ argv.index(item) for item in argv if item in ['-o', '--output'] ][0] + 1
+            format_arg_index = [
+                argv.index(item)
+                for item in argv if item in ['-o', '--output']
+            ][0] + 1
             format = argv[format_arg_index]
 
             if any(item in argv for item in ['-s', '--style']):
-                style_arg_index = [ argv.index(item) for item in argv if item in ['-s', '--style'] ][0] + 1
+                style_arg_index = [
+                    argv.index(item)
+                    for item in argv if item in ['-s', '--style']
+                ][0] + 1
                 style = argv[style_arg_index]
 
                 formated_tasks = format_task(tasks, format=format, style=style)
@@ -83,33 +87,39 @@ def call_action():
 
     if argv[1] == 'describe':
         task = Task()
-        args = argv[2]
-        task.describe(args)
+        args = argv[2:]
+        for arg in args:
+            task.describe(arg)
 
     if argv[1] == 'start':
         task = Task()
-        args = argv[2]
-        task.start(args)
+        args = argv[2:]
+        for arg in args:
+            task.start(arg)
 
     if argv[1] == 'stop':
         task = Task()
-        args = argv[2]
-        task.stop(args)
+        args = argv[2:]
+        for arg in args:
+            task.stop(arg)
 
     if argv[1] == 'finish':
         task = Task()
-        args = argv[2]
-        task.finish(args)
+        args = argv[2:]
+        for arg in args:
+            task.finish(arg)
 
     if argv[1] == 'cancel':
         task = Task()
-        args = argv[2]
-        task.cancel(args)
+        args = argv[2:]
+        for arg in args:
+            task.cancel(arg)
 
     if argv[1] == 'delete':
         task = Task()
-        args = argv[2]
-        task.delete(args)
+        args = argv[2:]
+        for arg in args:
+            task.delete(arg)
 
     if argv[1] == 'help':
         usage()
