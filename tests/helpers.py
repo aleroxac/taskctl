@@ -1,4 +1,3 @@
-import pytest
 from pathlib import Path
 from src.app.entities.task import Task
 from json import load
